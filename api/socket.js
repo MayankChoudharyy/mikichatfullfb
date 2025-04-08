@@ -1,39 +1,40 @@
-const users = new Map();
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+const { Server } = require("socket.io");
 
-const socketHandler = (io) => {
-  io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+dotenv.config();
 
-    socket.on('join', ({ userId }) => {
-      users.set(userId, socket.id);
-      io.emit('online-users', Array.from(users.keys()));
-    });
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
-    socket.on('send-message', ({ sender, receiver, text }) => {
-      const receiverSocket = users.get(receiver);
-      if (receiverSocket) {
-        io.to(receiverSocket).emit('receive-message', { sender, text });
-      }
-    });
+const authRoutes = require("./api/auth");
+const messageRoutes = require("./api/messages");
+const socketHandler = require("./api/socket");
+const connectDB = require("./utils/db");
 
-    socket.on('typing', ({ sender, receiver }) => {
-      const receiverSocket = users.get(receiver);
-      if (receiverSocket) {
-        io.to(receiverSocket).emit('typing', { sender });
-      }
-    });
+app.use(cors());
+app.use(express.json());
 
-    socket.on('disconnect', () => {
-      for (const [userId, socketId] of users.entries()) {
-        if (socketId === socket.id) {
-          users.delete(userId);
-          break;
-        }
-      }
-      io.emit('online-users', Array.from(users.keys()));
-      console.log('User disconnected:', socket.id);
-    });
+// API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+
+// Socket setup
+socketHandler(io);
+
+// Connect DB and start server
+const PORT = process.env.PORT || 5000;
+connectDB().then(() => {
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
-};
-
-module.exports = socketHandler;
+});
