@@ -5,6 +5,7 @@ import Register from './components/Register';
 import ForgotPassword from './components/ForgotPassword';
 import Chat from './components/Chat';
 import Dashboard from './components/Dashboard';
+import './App.css';
 
 function App() {
   return (
