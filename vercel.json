@@ -1,29 +1,31 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "server.js",
-        "use": "@vercel/node"
-      },
-      {
-        "src": "client/package.json",
-        "use": "@vercel/static-build"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "/api/$1.js"
-      },
-      {
-        "src": "/socket.io/",
-        "dest": "/server.js"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/client/build/index.html"
-      }
-    ],
-    "outputDirectory": "client/build"
-  }
-  
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/socket.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/build/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/client/build/index.html"
+    }
+  ],
+  "outputDirectory": "client/build"
+}
